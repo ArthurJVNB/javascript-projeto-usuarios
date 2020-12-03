@@ -32,11 +32,45 @@ class UserController {
 
             event.preventDefault();
 
-            this.addLine(this.getValues());
+            let values = this.getValues();
+            
+            this.getPhoto((content) => {
+
+                values.photo = content;
+                this.addLine(values);
+
+            });
 
         });
 
     } // END FUNCTION onSubmit
+
+    getPhoto(callback) {
+
+        
+        let elements = [...this.formElement.elements].filter(element => {
+            if (element.name === 'photo') {
+                return element;
+            }
+        });
+
+        let file = elements[0].files[0];
+
+        let fileReader = new FileReader();
+
+        fileReader.readAsDataURL(file);
+
+        fileReader.onload = () => { // Quando terminar de ler o arquivo, será chamado o 'onload'.
+                                    // Esse 'onload' pode ser escrito antes do próprio 'readAsDataURL'.
+                                    // Ele apenas será chamado depois de toda forma, quando terminar a operação
+                                    // de conversão da imagem para base64. Esse formato pode ser colocado como source
+                                    // da tag 'image' do html (é só ver onde foi colocado lá em baixo, no 'addLine',
+                                    // pra lembrar como ficou).
+            callback(fileReader.result);
+
+        };
+
+    } // END FUNCTION getPhoto
 
     getValues() {
 
@@ -73,7 +107,7 @@ class UserController {
         console.log(userData);
         this.tableElement.innerHTML += // += FARÁ TODA A DIFERENÇA kkkkk (ele tava substituindo tudo que tinha na tabela, ao invés de concatenar)
         `<tr>
-            <td><img src="dist/img/user1-128x128.jpg" alt="User Image" class="img-circle img-sm"></td>
+            <td><img src="${userData.photo}" alt="User Image" class="img-circle img-sm"></td>
             <td>${userData.name}</td>
             <td>${userData.email}</td>
             <td>${userData.admin}</td>
