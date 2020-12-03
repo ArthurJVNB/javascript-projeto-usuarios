@@ -2,8 +2,8 @@ class UserController {
 
     constructor(formId, tableId) {
 
-        this.formElement = document.getElementById(formId);
-        this.tableElement = document.getElementById(tableId);
+        this.formEl = document.getElementById(formId);
+        this.tableEl = document.getElementById(tableId);
 
         this.onSubmit();
 
@@ -28,27 +28,77 @@ class UserController {
         */
 
         // USANDO O ARROW FUNCTION, O 'this' NÃO MUDA DE REFERÊNCIA, NÃO HAVENDO ASSIM CONFLITO NO 'this'.
-        this.formElement.addEventListener('submit', event => {
+        this.formEl.addEventListener('submit', event => {
 
             event.preventDefault();
 
             let values = this.getValues();
             
-            this.getPhoto((content) => {
+            // Aqui é a forma do getPhoto esperando um Promise
+            this.getPhoto().then(
+                (photo) => {
+                    values.photo = photo;
+                    this.addLine(values);
+                },
+                (error) => {
+                    console.error(error);
+                }
+            );
 
-                values.photo = content;
-                this.addLine(values);
+            // Aqui é a forma do getPhoto esperando um callback
+            // this.getPhotoCallback((content) => {
 
-            });
+            //     values.photo = content;
+            //     this.addLine(values);
+
+            // });
 
         });
 
     } // END FUNCTION onSubmit
 
-    getPhoto(callback) {
+    getPhoto() {
 
-        
-        let elements = [...this.formElement.elements].filter(element => {
+        return new Promise((resolve, reject) => {
+            let fileReader = new FileReader();
+
+            let elements = [...this.formEl.elements].filter(element => {
+                if (element.name === 'photo') {
+                    return element;
+                }
+            });
+
+            let file = elements[0].files[0];
+
+            if (file) {
+                // Só fará a leitura do arquivo de foto se de fato o usuário enviou alguma foto.
+                fileReader.readAsDataURL(file);
+            } else {
+                // É porque não foi feito upload da imagem, então pegamos uma padrão dessa pasta do projeto.
+                resolve('dist/img/boxed-bg.jpg'); 
+            }
+
+            
+            fileReader.onload = () => { // Quando terminar de ler o arquivo, será chamado o 'onload'.
+                                        // Esse 'onload' pode ser escrito antes do próprio 'readAsDataURL'.
+                                        // Ele apenas será chamado depois de toda forma, quando terminar a operação
+                                        // de conversão da imagem para base64. Esse formato pode ser colocado como source
+                                        // da tag 'image' do html (é só ver onde foi colocado lá em baixo, no 'addLine',
+                                        // pra lembrar como ficou).
+                resolve(fileReader.result);
+            };
+    
+            fileReader.onerror = (e) => {
+                reject(e);
+            };
+
+        });
+
+    } // END FUNCTION getPhoto USING Promise
+
+    // VERSÃO getPhoto USANDO callback
+    getPhotoCallback(callback) {
+        let elements = [...this.formEl.elements].filter(element => {
             if (element.name === 'photo') {
                 return element;
             }
@@ -66,22 +116,29 @@ class UserController {
                                     // de conversão da imagem para base64. Esse formato pode ser colocado como source
                                     // da tag 'image' do html (é só ver onde foi colocado lá em baixo, no 'addLine',
                                     // pra lembrar como ficou).
-            callback(fileReader.result);
+            if (typeof callback == 'function') callback(fileReader.result);
 
-        };
+        }; // END FUNCTION getPhoto USING callback
 
-    } // END FUNCTION getPhoto
+        fileReader.onerror = () => {
+            // TODO DEVOLVER ERRO
+        }
+    }
 
     getValues() {
 
         let user = {};
 
-        [...this.formElement.elements].forEach((field, index) => {
+        [...this.formEl.elements].forEach((field, index) => {
     
             if (field.name == 'gender') {
     
                 if (field.checked) user[field.name] = field.value;
                 
+            } else if (field.name == 'admin') {
+
+                user[field.name] = field.checked;
+
             } else {
                 
                 user[field.name] = field.value;
@@ -105,18 +162,33 @@ class UserController {
 
     addLine(userData) {
         console.log(userData);
-        this.tableElement.innerHTML += // += FARÁ TODA A DIFERENÇA kkkkk (ele tava substituindo tudo que tinha na tabela, ao invés de concatenar)
-        `<tr>
-            <td><img src="${userData.photo}" alt="User Image" class="img-circle img-sm"></td>
-            <td>${userData.name}</td>
-            <td>${userData.email}</td>
-            <td>${userData.admin}</td>
-            <td>${userData.birth}</td>
-            <td>
-            <button type="button" class="btn btn-primary btn-xs btn-flat">Editar</button>
-            <button type="button" class="btn btn-danger btn-xs btn-flat">Excluir</button>
-            </td>
-        </tr>`; // 'tr' significa 'table row'
+        this.tableEl.innerHTML += // += FARÁ TODA A DIFERENÇA kkkkk (ele tava substituindo tudo que tinha na tabela, ao invés de concatenar)
+            `<tr>
+                <td><img src="${userData.photo}" alt="User Image" class="img-circle img-sm"></td>
+                <td>${userData.name}</td>
+                <td>${userData.email}</td>
+                <td>${userData.admin ? 'Sim' : 'Não'}</td>
+                <td>${userData.birth}</td>
+                <td>
+                <button type="button" class="btn btn-primary btn-xs btn-flat">Editar</button>
+                <button type="button" class="btn btn-danger btn-xs btn-flat">Excluir</button>
+                </td>
+            </tr>`; // 'tr' significa 'table row'
+
+        // Se for sem ser concatenando do jeito que está na parte superior, deve então ser assim:
+        // let tr = document.createElement('tr');
+        // tr.innerHTML = 
+        //     `<td><img src="${userData.photo}" alt="User Image" class="img-circle img-sm"></td>
+        //     <td>${userData.name}</td>
+        //     <td>${userData.email}</td>
+        //     <td>${userData.admin}</td>
+        //     <td>${userData.birth}</td>
+        //     <td>
+        //     <button type="button" class="btn btn-primary btn-xs btn-flat">Editar</button>
+        //     <button type="button" class="btn btn-danger btn-xs btn-flat">Excluir</button>
+        //     </td>`;
+        
+        // this.tableEl.appendChild(tr);
     
     } // END FUNCTION addLine
 
