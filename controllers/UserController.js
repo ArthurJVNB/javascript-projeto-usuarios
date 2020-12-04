@@ -32,13 +32,18 @@ class UserController {
 
             event.preventDefault();
 
+            let btnSubmit = this.formEl.querySelector('[type=submit]');
+            btnSubmit.disabled = true;
+            
             let values = this.getValues();
             
             // Aqui é a forma do getPhoto esperando um Promise
             this.getPhoto().then(
                 (photo) => {
                     values.photo = photo;
+                    this.formEl.reset();
                     this.addLine(values);
+                    btnSubmit.disabled = false;
                 },
                 (error) => {
                     console.error(error);
