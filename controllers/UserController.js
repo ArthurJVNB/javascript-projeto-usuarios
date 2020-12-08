@@ -38,17 +38,21 @@ class UserController {
             let values = this.getValues();
             
             // Aqui é a forma do getPhoto esperando um Promise
-            this.getPhoto().then(
-                (photo) => {
-                    values.photo = photo;
-                    this.formEl.reset();
-                    this.addLine(values);
-                    btnSubmit.disabled = false;
-                },
-                (error) => {
-                    console.error(error);
-                }
-            );
+            if (values) {
+                this.getPhoto().then(
+                    (photo) => {
+                        values.photo = photo;
+                        this.formEl.reset();
+                        this.addLine(values);
+                        btnSubmit.disabled = false;
+                    },
+                    (error) => {
+                        console.error(error);
+                    }
+                );
+            } else {
+                btnSubmit.disabled = false;
+            }
 
             // Aqui é a forma do getPhoto esperando um callback
             // this.getPhotoCallback((content) => {
@@ -86,7 +90,7 @@ class UserController {
             
             fileReader.onload = () => { // Quando terminar de ler o arquivo, será chamado o 'onload'.
                                         // Esse 'onload' pode ser escrito antes do próprio 'readAsDataURL'.
-                                        // Ele apenas será chamado depois de toda forma, quando terminar a operação
+                                        // Ele de toda forma apenas será chamado depois, quando terminar a operação
                                         // de conversão da imagem para base64. Esse formato pode ser colocado como source
                                         // da tag 'image' do html (é só ver onde foi colocado lá em baixo, no 'addLine',
                                         // pra lembrar como ficou).
@@ -133,9 +137,16 @@ class UserController {
     getValues() {
 
         let user = {};
+        let isValid = true;
 
         [...this.formEl.elements].forEach((field, index) => {
     
+            if (['name', 'email', 'password'].indexOf(field.name) !== -1 && !field.value) {
+                // Ou seja, a pergunta é: o field que estou pegando agora é um desses três e ele está vazio?
+                field.parentElement.classList.add('has-error');
+                isValid = false;
+            }
+
             if (field.name == 'gender') {
     
                 if (field.checked) user[field.name] = field.value;
@@ -151,6 +162,13 @@ class UserController {
             }
             
         });
+
+        if (!isValid) {
+            return false;
+        } else {
+            // Deixa visualmente normal qualquer campo que esteja vermelho (que está indicando erro)
+            this.clearFormFieldsError();
+        }
 
         return new User(
             user.name, 
@@ -196,5 +214,15 @@ class UserController {
         // this.tableEl.appendChild(tr);
     
     } // END FUNCTION addLine
+
+    clearFormFieldsError() {
+        let hasErrorClasses = this.formEl.querySelectorAll('.has-error');
+
+        if (hasErrorClasses.length > 0) {
+            hasErrorClasses.forEach(element => {
+                element.classList.remove('has-error');
+            })
+        }
+    }
 
 } // END CLASS UserController
