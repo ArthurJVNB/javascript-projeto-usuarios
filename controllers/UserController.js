@@ -4,6 +4,8 @@ class UserController {
 
         this.formEl = document.getElementById(formId);
         this.tableEl = document.getElementById(tableId);
+        this.numberUsersEl = document.querySelector("#number-users");
+        this.numberUsersAdminsEl = document.querySelector("#number-users-admin");
 
         this.onSubmit();
 
@@ -186,36 +188,60 @@ class UserController {
     } // END METHOD getValues
 
     addLine(userData) {
-        console.log(userData);
-        this.tableEl.innerHTML += // += FARÁ TODA A DIFERENÇA kkkkk (ele tava substituindo tudo que tinha na tabela, ao invés de concatenar)
-            `<tr>
-                <td><img src="${userData.photo}" alt="User Image" class="img-circle img-sm"></td>
-                <td>${userData.name}</td>
-                <td>${userData.email}</td>
-                <td>${userData.admin ? 'Sim' : 'Não'}</td>
-                <td>${Utils.dateFormat(userData.register)}</td>
-                <td>
-                <button type="button" class="btn btn-primary btn-xs btn-flat">Editar</button>
-                <button type="button" class="btn btn-danger btn-xs btn-flat">Excluir</button>
-                </td>
-            </tr>`; // 'tr' significa 'table row'
 
-        // Se for sem ser concatenando do jeito que está na parte superior, deve então ser assim:
-        // let tr = document.createElement('tr');
-        // tr.innerHTML = 
-        //     `<td><img src="${userData.photo}" alt="User Image" class="img-circle img-sm"></td>
-        //     <td>${userData.name}</td>
-        //     <td>${userData.email}</td>
-        //     <td>${userData.admin}</td>
-        //     <td>${userData.birth}</td>
-        //     <td>
-        //     <button type="button" class="btn btn-primary btn-xs btn-flat">Editar</button>
-        //     <button type="button" class="btn btn-danger btn-xs btn-flat">Excluir</button>
-        //     </td>`;
+        // Se for sem ser concatenando do jeito que está na parte inferior desse método, deve então ser criando e adicionando
+        // um elemento HTML assim:
+        let tr = document.createElement('tr');
+        tr.dataset.user = JSON.stringify(userData);
+
+        tr.innerHTML = 
+            `<td><img src="${userData.photo}" alt="User Image" class="img-circle img-sm"></td>
+            <td>${userData.name}</td>
+            <td>${userData.email}</td>
+            <td>${userData.admin ? 'Sim' : 'Não'}</td>
+            <td>${Utils.dateFormat(userData.register)}</td>
+            <td>
+            <button type="button" class="btn btn-primary btn-xs btn-flat">Editar</button>
+            <button type="button" class="btn btn-danger btn-xs btn-flat">Excluir</button>
+            </td>`;
         
-        // this.tableEl.appendChild(tr);
+        this.tableEl.appendChild(tr);
+
+        this.updateCount();
+
+        // this.tableEl.innerHTML += // += FARÁ TODA A DIFERENÇA kkkkk (ele tava substituindo tudo que tinha na tabela, ao invés de concatenar)
+        //     `<tr>
+        //         <td><img src="${userData.photo}" alt="User Image" class="img-circle img-sm"></td>
+        //         <td>${userData.name}</td>
+        //         <td>${userData.email}</td>
+        //         <td>${userData.admin ? 'Sim' : 'Não'}</td>
+        //         <td>${Utils.dateFormat(userData.register)}</td>
+        //         <td>
+        //         <button type="button" class="btn btn-primary btn-xs btn-flat">Editar</button>
+        //         <button type="button" class="btn btn-danger btn-xs btn-flat">Excluir</button>
+        //         </td>
+        //     </tr>`; // 'tr' significa 'table row'
     
     } // END METHOD addLine
+
+    updateCount() {
+        // Agora vamos atualizar quantos usuários e admins temos na tabela pra colocar no painel
+        let numberUsers = 0;
+        let numberAdmins = 0;
+
+        [...this.tableEl.children].forEach(row => {
+
+            numberUsers++;
+
+            let user = JSON.parse(row.dataset.user);
+            if (user._admin) numberAdmins++;
+
+        });
+
+        this.numberUsersEl.innerHTML = numberUsers;
+        this.numberUsersAdminsEl.innerHTML = numberAdmins;
+        console.log("total:", numberUsers, numberAdmins);
+    }
 
     clearFormFieldsError() {
         let hasErrorClasses = this.formEl.querySelectorAll('.has-error');
