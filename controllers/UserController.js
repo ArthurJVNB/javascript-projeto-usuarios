@@ -36,23 +36,25 @@ class UserController {
             btnSubmit.disabled = true;
             
             let values = this.getValues();
+
+            if (!values) {
+                // Retorna se falhar a pegada de valores
+                btnSubmit.disabled = false;
+                return false;
+            }
             
             // Aqui é a forma do getPhoto esperando um Promise
-            if (values) {
-                this.getPhoto().then(
-                    (photo) => {
-                        values.photo = photo;
-                        this.formEl.reset();
-                        this.addLine(values);
-                        btnSubmit.disabled = false;
-                    },
-                    (error) => {
-                        console.error(error);
-                    }
-                );
-            } else {
-                btnSubmit.disabled = false;
-            }
+            this.getPhoto().then(
+                (photo) => {
+                    values.photo = photo;
+                    this.formEl.reset();
+                    this.addLine(values);
+                    btnSubmit.disabled = false;
+                },
+                (error) => {
+                    console.error(error);
+                }
+            );
 
             // Aqui é a forma do getPhoto esperando um callback
             // this.getPhotoCallback((content) => {
@@ -64,7 +66,7 @@ class UserController {
 
         });
 
-    } // END FUNCTION onSubmit
+    } // END METHOD onSubmit
 
     getPhoto() {
 
@@ -103,7 +105,7 @@ class UserController {
 
         });
 
-    } // END FUNCTION getPhoto USING Promise
+    } // END METHOD getPhoto USING Promise
 
     // VERSÃO getPhoto USANDO callback
     getPhotoCallback(callback) {
@@ -127,7 +129,7 @@ class UserController {
                                     // pra lembrar como ficou).
             if (typeof callback == 'function') callback(fileReader.result);
 
-        }; // END FUNCTION getPhoto USING callback
+        }; // END METHOD getPhoto USING callback
 
         fileReader.onerror = () => {
             // TODO DEVOLVER ERRO
@@ -181,7 +183,7 @@ class UserController {
             user.admin
             );
 
-    } // END FUNCTION getValues
+    } // END METHOD getValues
 
     addLine(userData) {
         console.log(userData);
@@ -213,7 +215,7 @@ class UserController {
         
         // this.tableEl.appendChild(tr);
     
-    } // END FUNCTION addLine
+    } // END METHOD addLine
 
     clearFormFieldsError() {
         let hasErrorClasses = this.formEl.querySelectorAll('.has-error');
