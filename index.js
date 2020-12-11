@@ -1,4 +1,4 @@
-let userController = new UserController('form-user-create', 'table-users');
+let userController = new UserController('form-user-create', 'form-user-update', 'table-users');
 
 //#region Formas diferentes de selecionar um elemento no documento HTML
     /** 

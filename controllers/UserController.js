@@ -1,13 +1,17 @@
 class UserController {
 
-    constructor(formId, tableId) {
+    constructor(formCreateId, formUpdateId, tableId) {
 
-        this.formEl = document.getElementById(formId);
+        this.formCreateEl = document.getElementById(formCreateId);
+        this.formUpdateEl = document.getElementById(formUpdateId);
         this.tableEl = document.getElementById(tableId);
         this.numberUsersEl = document.querySelector("#number-users");
         this.numberUsersAdminsEl = document.querySelector("#number-users-admin");
+        this.boxCreateEl = document.querySelector("#box-user-create");
+        this.boxUpdateEl = document.querySelector("#box-user-update");
 
         this.onSubmit();
+        this.onCancelUpdate();
 
     }
 
@@ -30,11 +34,11 @@ class UserController {
         */
 
         // USANDO O ARROW FUNCTION, O 'this' NÃO MUDA DE REFERÊNCIA, NÃO HAVENDO ASSIM CONFLITO NO 'this'.
-        this.formEl.addEventListener('submit', event => {
+        this.formCreateEl.addEventListener('submit', event => {
 
             event.preventDefault();
 
-            let btnSubmit = this.formEl.querySelector('[type=submit]');
+            let btnSubmit = this.formCreateEl.querySelector('[type=submit]');
             btnSubmit.disabled = true;
             
             let values = this.getValues();
@@ -49,7 +53,7 @@ class UserController {
             this.getPhoto().then(
                 (photo) => {
                     values.photo = photo;
-                    this.formEl.reset();
+                    this.formCreateEl.reset();
                     this.addLine(values);
                     btnSubmit.disabled = false;
                 },
@@ -70,12 +74,18 @@ class UserController {
 
     } // END METHOD onSubmit
 
+    onCancelUpdate() {
+        document.querySelector('#box-user-update .btn-cancel').addEventListener('click', e => {
+            this.showCreatePanel();
+        });
+    }
+
     getPhoto() {
 
         return new Promise((resolve, reject) => {
             let fileReader = new FileReader();
 
-            let elements = [...this.formEl.elements].filter(element => {
+            let elements = [...this.formCreateEl.elements].filter(element => {
                 if (element.name === 'photo') {
                     return element;
                 }
@@ -111,7 +121,7 @@ class UserController {
 
     // VERSÃO getPhoto USANDO callback
     getPhotoCallback(callback) {
-        let elements = [...this.formEl.elements].filter(element => {
+        let elements = [...this.formCreateEl.elements].filter(element => {
             if (element.name === 'photo') {
                 return element;
             }
@@ -143,7 +153,7 @@ class UserController {
         let user = {};
         let isValid = true;
 
-        [...this.formEl.elements].forEach((field, index) => {
+        [...this.formCreateEl.elements].forEach((field, index) => {
     
             if (['name', 'email', 'password'].indexOf(field.name) !== -1 && !field.value) {
                 // Ou seja, a pergunta é: o field que estou pegando agora é um desses três e ele está vazio?
@@ -201,10 +211,16 @@ class UserController {
             <td>${userData.admin ? 'Sim' : 'Não'}</td>
             <td>${Utils.dateFormat(userData.register)}</td>
             <td>
-            <button type="button" class="btn btn-primary btn-xs btn-flat">Editar</button>
+            <button type="button" class="btn btn-primary btn-edit btn-xs btn-flat">Editar</button>
             <button type="button" class="btn btn-danger btn-xs btn-flat">Excluir</button>
             </td>`;
         
+        tr.querySelector('.btn-edit').addEventListener('click', e => {
+            
+            this.enterUpdateForm(JSON.parse(tr.dataset.user));
+
+        });
+
         this.tableEl.appendChild(tr);
 
         this.updateCount();
@@ -240,17 +256,45 @@ class UserController {
 
         this.numberUsersEl.innerHTML = numberUsers;
         this.numberUsersAdminsEl.innerHTML = numberAdmins;
-        console.log("total:", numberUsers, numberAdmins);
     }
 
     clearFormFieldsError() {
-        let hasErrorClasses = this.formEl.querySelectorAll('.has-error');
+        let hasErrorClasses = this.formCreateEl.querySelectorAll('.has-error');
 
         if (hasErrorClasses.length > 0) {
             hasErrorClasses.forEach(element => {
                 element.classList.remove('has-error');
             })
         }
+    }
+
+    showCreatePanel() {
+        this.boxCreateEl.style.display = 'block';
+        this.boxUpdateEl.style.display = 'none';
+    }
+
+    showUpdatePanel() {
+        this.boxCreateEl.style.display = 'none';
+        this.boxUpdateEl.style.display = 'block';
+    }
+
+    enterUpdateForm(userJson) {
+        
+        for (let name in userJson) {
+            
+            let formatedName = name.replace('_', '');
+            let field = this.formUpdateEl.querySelector('[name="' + formatedName + '"]');
+            
+            if (field) {
+                if (field.type == 'file') continue; // Pula essa iteração, ignorando todas as linhas abaixo e
+                                                    // passa pra próxima iteração desse for in.
+
+                field.value = userJson[name];
+            }
+            
+        }
+        
+        this.showUpdatePanel();
     }
 
 } // END CLASS UserController
