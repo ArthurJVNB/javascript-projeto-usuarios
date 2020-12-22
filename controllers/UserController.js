@@ -11,7 +11,7 @@ class UserController {
         this.boxUpdateEl = document.querySelector("#box-user-update");
 
         this.onSubmit();
-        this.onCancelUpdate();
+        this.onEdit();
 
     }
 
@@ -74,9 +74,13 @@ class UserController {
 
     } // END METHOD onSubmit
 
-    onCancelUpdate() {
+    onEdit() {
         document.querySelector('#box-user-update .btn-cancel').addEventListener('click', e => {
-            this.showCreatePanel();
+            this.showPanelCreate();
+        });
+
+        document.querySelector('#box-user-update .btn-primary').addEventListener('submit', e => {
+            e.preventDefault();
         });
     }
 
@@ -217,7 +221,7 @@ class UserController {
         
         tr.querySelector('.btn-edit').addEventListener('click', e => {
             
-            this.enterUpdateForm(JSON.parse(tr.dataset.user));
+            this.enterUserEditForm(JSON.parse(tr.dataset.user));
 
         });
 
@@ -268,33 +272,40 @@ class UserController {
         }
     }
 
-    showCreatePanel() {
+    showPanelCreate() {
         this.boxCreateEl.style.display = 'block';
         this.boxUpdateEl.style.display = 'none';
     }
 
-    showUpdatePanel() {
+    showPanelEdit() {
         this.boxCreateEl.style.display = 'none';
         this.boxUpdateEl.style.display = 'block';
     }
 
-    enterUpdateForm(userJson) {
-        
-        for (let name in userJson) {
-            
-            let formatedName = name.replace('_', '');
-            let field = this.formUpdateEl.querySelector('[name="' + formatedName + '"]');
+    enterUserEditForm(json) {
+        for (let name in json) {
+            let field = this.formUpdateEl.querySelector('[name=' + name.replace('_', '') + ']');
             
             if (field) {
-                if (field.type == 'file') continue; // Pula essa iteração, ignorando todas as linhas abaixo e
-                                                    // passa pra próxima iteração desse for in.
+                switch (field.type) {
+                    case 'file':
+                        continue;   // Pula essa iteração, ignorando todas as linhas abaixo e
+                                    // passa pra próxima iteração desse for in.
+                    case 'radio':
+                        field = this.formUpdateEl.querySelector('[name=' + name.replace('_', '') + '][value='+ json[name] + ']');
+                        field.checked = true;
+                    break;
 
-                field.value = userJson[name];
+                    case 'checkbox':
+                       field.checked = json[name];
+                    break;
+
+                    default:
+                        field.value = json[name];
+                }
             }
-            
         }
-        
-        this.showUpdatePanel();
+        this.showPanelEdit();
     }
 
 } // END CLASS UserController
