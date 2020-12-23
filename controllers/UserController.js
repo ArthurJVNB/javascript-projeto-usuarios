@@ -41,7 +41,7 @@ class UserController {
             let btnSubmit = this.formCreateEl.querySelector('[type=submit]');
             btnSubmit.disabled = true;
             
-            let values = this.getValues();
+            let values = this.getValues(this.formCreateEl);
 
             if (!values) {
                 // Retorna se falhar a pegada de valores
@@ -72,18 +72,38 @@ class UserController {
 
         });
 
-    } // END METHOD onSubmit
-
+    }
     onEdit() {
         document.querySelector('#box-user-update .btn-cancel').addEventListener('click', e => {
             this.showPanelCreate();
         });
 
-        document.querySelector('#box-user-update .btn-primary').addEventListener('submit', e => {
-            e.preventDefault();
+        this.formUpdateEl.addEventListener('submit', event => {
+            event.preventDefault();
+
+            let btnSubmit = this.formUpdateEl.querySelector('[type=submit]');
+            btnSubmit.disabled = true;
+            
+            let values = this.getValues(this.formUpdateEl);
+
+            if (!values) {
+                // Retorna se falhar a pegada de valores
+                btnSubmit.disabled = false;
+                return false;
+            }
+
+            let index = this.formUpdateEl.dataset.trIndex;
+            let tr = this.tableEl.rows[index];
+            
+            this.trUpdate(tr, values);
+            this.updateCount();
+
+            btnSubmit.disabled = false;
+            this.showPanelCreate();
         });
     }
 
+    // VERSÃO getPhoto USANDO Promise
     getPhoto() {
 
         return new Promise((resolve, reject) => {
@@ -121,7 +141,7 @@ class UserController {
 
         });
 
-    } // END METHOD getPhoto USING Promise
+    }
 
     // VERSÃO getPhoto USANDO callback
     getPhotoCallback(callback) {
@@ -152,12 +172,12 @@ class UserController {
         }
     }
 
-    getValues() {
+    getValues(formEl) {
 
         let user = {};
         let isValid = true;
 
-        [...this.formCreateEl.elements].forEach((field, index) => {
+        [...formEl.elements].forEach((field, index) => {
     
             if (['name', 'email', 'password'].indexOf(field.name) !== -1 && !field.value) {
                 // Ou seja, a pergunta é: o field que estou pegando agora é um desses três e ele está vazio?
@@ -185,7 +205,7 @@ class UserController {
             return false;
         } else {
             // Deixa visualmente normal qualquer campo que esteja vermelho (que está indicando erro)
-            this.clearFormFieldsError();
+            this.clearErrorFromFormFields();
         }
 
         return new User(
@@ -199,31 +219,14 @@ class UserController {
             user.admin
             );
 
-    } // END METHOD getValues
+    }
 
     addLine(userData) {
 
         // Se for sem ser concatenando do jeito que está na parte inferior desse método, deve então ser criando e adicionando
         // um elemento HTML assim:
         let tr = document.createElement('tr');
-        tr.dataset.user = JSON.stringify(userData);
-
-        tr.innerHTML = 
-            `<td><img src="${userData.photo}" alt="User Image" class="img-circle img-sm"></td>
-            <td>${userData.name}</td>
-            <td>${userData.email}</td>
-            <td>${userData.admin ? 'Sim' : 'Não'}</td>
-            <td>${Utils.dateFormat(userData.register)}</td>
-            <td>
-            <button type="button" class="btn btn-primary btn-edit btn-xs btn-flat">Editar</button>
-            <button type="button" class="btn btn-danger btn-xs btn-flat">Excluir</button>
-            </td>`;
-        
-        tr.querySelector('.btn-edit').addEventListener('click', e => {
-            
-            this.enterUserEditForm(JSON.parse(tr.dataset.user));
-
-        });
+        this.trUpdate(tr, userData);
 
         this.tableEl.appendChild(tr);
 
@@ -242,7 +245,7 @@ class UserController {
         //         </td>
         //     </tr>`; // 'tr' significa 'table row'
     
-    } // END METHOD addLine
+    }
 
     updateCount() {
         // Agora vamos atualizar quantos usuários e admins temos na tabela pra colocar no painel
@@ -262,7 +265,7 @@ class UserController {
         this.numberUsersAdminsEl.innerHTML = numberAdmins;
     }
 
-    clearFormFieldsError() {
+    clearErrorFromFormFields() {
         let hasErrorClasses = this.formCreateEl.querySelectorAll('.has-error');
 
         if (hasErrorClasses.length > 0) {
@@ -282,30 +285,58 @@ class UserController {
         this.boxUpdateEl.style.display = 'block';
     }
 
-    enterUserEditForm(json) {
-        for (let name in json) {
-            let field = this.formUpdateEl.querySelector('[name=' + name.replace('_', '') + ']');
-            
-            if (field) {
-                switch (field.type) {
-                    case 'file':
-                        continue;   // Pula essa iteração, ignorando todas as linhas abaixo e
-                                    // passa pra próxima iteração desse for in.
-                    case 'radio':
-                        field = this.formUpdateEl.querySelector('[name=' + name.replace('_', '') + '][value='+ json[name] + ']');
-                        field.checked = true;
-                    break;
-
-                    case 'checkbox':
-                       field.checked = json[name];
-                    break;
-
-                    default:
-                        field.value = json[name];
-                }
-            }
-        }
-        this.showPanelEdit();
+    trUpdate(tr, user) {
+        this.trSetUserValues(tr, user);
+        this.trUpdateView(tr, user);
+        this.trAddEvents(tr);
     }
 
-} // END CLASS UserController
+    trSetUserValues(tr, user) {
+        tr.dataset.user = JSON.stringify(user);
+    }
+
+    trUpdateView(tr, user) {
+        tr.innerHTML = 
+            `<td><img src="${user.photo}" alt="User Image" class="img-circle img-sm"></td>
+            <td>${user.name}</td>
+            <td>${user.email}</td>
+            <td>${user.admin ? 'Sim' : 'Não'}</td>
+            <td>${Utils.dateFormat(user.register)}</td>
+            <td>
+            <button type="button" class="btn btn-primary btn-edit btn-xs btn-flat">Editar</button>
+            <button type="button" class="btn btn-danger btn-xs btn-flat">Excluir</button>
+            </td>`;
+    }
+
+    trAddEvents(tr) {
+        tr.querySelector('.btn-edit').addEventListener('click', e => {
+            
+            let json = JSON.parse(tr.dataset.user);
+            this.formUpdateEl.dataset.trIndex = tr.sectionRowIndex;
+
+            for (let name in json) {
+                let field = this.formUpdateEl.querySelector('[name=' + name.replace('_', '') + ']');
+                
+                if (field) {
+                    switch (field.type) {
+                        case 'file':
+                            continue;   // Pula essa iteração, ignorando todas as linhas abaixo e
+                                        // passa pra próxima iteração desse for in.
+                        case 'radio':
+                            field = this.formUpdateEl.querySelector('[name=' + name.replace('_', '') + '][value='+ json[name] + ']');
+                            field.checked = true;
+                            break;
+    
+                        case 'checkbox':
+                            field.checked = json[name];
+                            break;
+    
+                        default:
+                            field.value = json[name];
+                    }
+                }
+            }
+            this.showPanelEdit();
+        });
+    }
+}
