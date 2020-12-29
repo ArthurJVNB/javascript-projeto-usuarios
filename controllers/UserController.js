@@ -50,7 +50,7 @@ class UserController {
             }
             
             // Aqui é a forma do getPhoto esperando um Promise
-            this.getPhoto().then(
+            this.getPhoto(this.formCreateEl).then(
                 (photo) => {
                     values.photo = photo;
                     this.formCreateEl.reset();
@@ -73,6 +73,7 @@ class UserController {
         });
 
     }
+    
     onEdit() {
         document.querySelector('#box-user-update .btn-cancel').addEventListener('click', e => {
             this.showPanelCreate();
@@ -95,21 +96,28 @@ class UserController {
             let index = this.formUpdateEl.dataset.trIndex;
             let tr = this.tableEl.rows[index];
             
-            this.trUpdate(tr, values);
-            this.updateCount();
-
-            btnSubmit.disabled = false;
-            this.showPanelCreate();
+            this.getPhoto(this.formUpdateEl).then(
+                (photo) => {
+                    values.photo = photo;
+                    this.formCreateEl.reset();
+                    this.trUpdate(tr, values);
+                    this.updateCount();
+                    btnSubmit.disabled = false;
+                    this.showPanelCreate();
+                },
+                (error) => {
+                    console.error(error);
+                }
+            );
         });
     }
 
     // VERSÃO getPhoto USANDO Promise
-    getPhoto() {
-
+    getPhoto(form) {
         return new Promise((resolve, reject) => {
             let fileReader = new FileReader();
 
-            let elements = [...this.formCreateEl.elements].filter(element => {
+            let elements = [...form.elements].filter(element => {
                 if (element.name === 'photo') {
                     return element;
                 }
@@ -138,9 +146,7 @@ class UserController {
             fileReader.onerror = (e) => {
                 reject(e);
             };
-
         });
-
     }
 
     // VERSÃO getPhoto USANDO callback
@@ -309,6 +315,7 @@ class UserController {
     }
 
     trAddEvents(tr) {
+        // EVENTO PARA EDITAR
         tr.querySelector('.btn-edit').addEventListener('click', e => {
             
             let json = JSON.parse(tr.dataset.user);
@@ -336,6 +343,8 @@ class UserController {
                     }
                 }
             }
+
+            this.formUpdateEl.querySelector('[name=photo]').src = json._photo;
             this.showPanelEdit();
         });
     }
