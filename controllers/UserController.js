@@ -239,8 +239,19 @@ class UserController {
         return users;
     }
 
+    getUsersFromLocalStorage() {
+        let users = [];
+
+        if (localStorage.getItem('users')) {
+            users = JSON.parse(localStorage.getItem('users'));
+        }
+
+        return users;
+    }
+
     showAllSavedUsers() {
-        let users = this.getUsersFromSessionStorage();
+        // let users = this.getUsersFromSessionStorage();
+        let users = this.getUsersFromLocalStorage();
         users.forEach(user => {
             user = User.createFromJSON(user);
             this.addLine(user);
@@ -248,7 +259,8 @@ class UserController {
     }
 
     save(user, index = -1) {
-        let users = this.getUsersFromSessionStorage();
+        // let users = this.getUsersFromSessionStorage();
+        let users = this.getUsersFromLocalStorage();
 
         if (index !== -1) {
             users[index] = user;
@@ -256,7 +268,14 @@ class UserController {
             users.push(user);
         }
 
-        sessionStorage.setItem('users', JSON.stringify(users));
+        // sessionStorage.setItem('users', JSON.stringify(users));
+        localStorage.setItem('users', JSON.stringify(users));
+    }
+
+    delete(index) {
+        let users = this.getUsersFromLocalStorage();
+        users.splice(index, 1);
+        localStorage.setItem('users', JSON.stringify(users));
     }
 
     addLine(user) {
@@ -388,7 +407,11 @@ class UserController {
     trAddDeleteEvent(tr) {
         tr.querySelector('.btn-delete').addEventListener('click', e => {
             if (confirm('Tem certeza que deseja apagar esse usuário?')) {
+                let index = tr.sectionRowIndex;
+                
                 tr.remove();
+                this.delete(index);
+
                 this.showPanelCreate();
                 this.updateCount();
             }
