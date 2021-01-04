@@ -310,12 +310,16 @@ class UserController {
             <td>${Utils.dateFormat(user.register)}</td>
             <td>
             <button type="button" class="btn btn-primary btn-edit btn-xs btn-flat">Editar</button>
-            <button type="button" class="btn btn-danger btn-xs btn-flat">Excluir</button>
+            <button type="button" class="btn btn-danger btn-delete btn-xs btn-flat">Excluir</button>
             </td>`;
     }
 
     trAddEvents(tr) {
-        // EVENTO PARA EDITAR
+        this.trAddEditEvent(tr);
+        this.trAddDeleteEvent(tr);
+    }
+
+    trAddEditEvent(tr) {
         tr.querySelector('.btn-edit').addEventListener('click', e => {
             
             let json = JSON.parse(tr.dataset.user);
@@ -346,6 +350,16 @@ class UserController {
 
             this.formUpdateEl.querySelector('[name=photo]').src = json._photo;
             this.showPanelEdit();
+        });
+    }
+
+    trAddDeleteEvent(tr) {
+        tr.querySelector('.btn-delete').addEventListener('click', e => {
+            if (confirm('Tem certeza que deseja apagar esse usuário?')) {
+                tr.remove();
+                this.showPanelCreate();
+                this.updateCount();
+            }
         });
     }
 }
