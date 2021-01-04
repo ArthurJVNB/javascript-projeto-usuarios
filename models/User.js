@@ -14,23 +14,19 @@ class User {
 
     }
 
-    static create(json) {
-        // TODO: PEGAR O JSON, TRANSFORMAR EM USER. DAÍ LÁ NO USERCONTROLLER CHAMO ISSO, PEGO O USER CRIADO E PROCURO
-        // PELOS CAMPOS LÁ NO UPDATE DE USUÁRIOS.
-        // OBS: Aqui ainda não está feito o código correto.
-        for (let name in json) {
-            
-            let formatedName = name.replace('_', '');
-            let field = this.formUpdateEl.querySelector('[name="' + formatedName + '"]');
-            
-            if (field) {
-                if (field.type == 'file') continue; // Pula essa iteração, ignorando todas as linhas abaixo e
-                                                    // passa pra próxima iteração desse for in.
-
-                field.value = userJson[name];
+    static createFromJSON(json) {
+        let user = new User();
+        for (let data in json) {
+            switch (data) {
+                case '_register':
+                    user[data] = new Date(json[data]);
+                break;
+                default:
+                    user[data] = json[data];
             }
-            
         }
+
+        return user;
     }
 
     get name() { return this._name; }

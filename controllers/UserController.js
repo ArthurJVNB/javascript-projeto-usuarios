@@ -12,6 +12,7 @@ class UserController {
 
         this.onSubmit();
         this.onEdit();
+        this.showAllSavedUsers();
 
     }
 
@@ -54,6 +55,7 @@ class UserController {
                 (photo) => {
                     values.photo = photo;
                     this.formCreateEl.reset();
+                    this.save(values);
                     this.addLine(values);
                     btnSubmit.disabled = false;
                 },
@@ -95,10 +97,10 @@ class UserController {
 
             let index = this.formUpdateEl.dataset.trIndex;
             let tr = this.tableEl.rows[index];
-            
             this.getPhoto(this.formUpdateEl).then(
                 (photo) => {
                     values.photo = photo;
+                    this.save(values, index);
                     this.formCreateEl.reset();
                     this.trUpdate(tr, values);
                     this.updateCount();
@@ -227,12 +229,42 @@ class UserController {
 
     }
 
-    addLine(userData) {
+    getUsersFromSessionStorage() {
+        let users = [];
+
+        if (sessionStorage.getItem('users')) {
+            users = JSON.parse(sessionStorage.getItem('users'));
+        }
+
+        return users;
+    }
+
+    showAllSavedUsers() {
+        let users = this.getUsersFromSessionStorage();
+        users.forEach(user => {
+            user = User.createFromJSON(user);
+            this.addLine(user);
+        });
+    }
+
+    save(user, index = -1) {
+        let users = this.getUsersFromSessionStorage();
+
+        if (index !== -1) {
+            users[index] = user;
+        } else {
+            users.push(user);
+        }
+
+        sessionStorage.setItem('users', JSON.stringify(users));
+    }
+
+    addLine(user) {
 
         // Se for sem ser concatenando do jeito que está na parte inferior desse método, deve então ser criando e adicionando
         // um elemento HTML assim:
         let tr = document.createElement('tr');
-        this.trUpdate(tr, userData);
+        this.trUpdate(tr, user);
 
         this.tableEl.appendChild(tr);
 
