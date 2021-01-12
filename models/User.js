@@ -68,7 +68,7 @@ class User {
             // Aqui só entra se a página foi dada um refresh (perdendo o valor atualizado), ou se é a primeira vez que tá começando mesmo.
             const users = User.getUsers();
 
-            User._freeId = users[users.length - 1].id; // se der refresh pelo menos ele estará com a contagem atualizada
+            User._freeId = parseInt(users[users.length - 1].id); // se der refresh pelo menos ele estará com a contagem atualizada
         }
         return ++User._freeId;
     }
@@ -87,7 +87,8 @@ class User {
             // ATUALIZANDO USER EXISTENTE
             console.log('updating user', this);
             users = users.map(user => {
-                if (user.id === this.id) {
+                console.log('map user:', user);
+                if (user.id == this.id) {
                     user = this;
                 }
                 return user;
@@ -124,6 +125,7 @@ class User {
     get admin() { return this._admin; }
     get register() { return this._register; }
 
+    set id(value) { this._id = parseInt(value); }
     set name(value) { this._name = value; }
     set gender(value) { this._gender = value; }
     set birth(value) { this._birth = value; }

@@ -96,7 +96,7 @@ class UserController {
                 return false;
             }
 
-            values._id = this.formUpdateEl.dataset.userId;
+            values.id = this.formUpdateEl.dataset.userId;
 
             let index = this.formUpdateEl.dataset.trIndex;
             let tr = this.tableEl.rows[index];
