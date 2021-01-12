@@ -55,7 +55,7 @@ class UserController {
                 (photo) => {
                     values.photo = photo;
                     this.formCreateEl.reset();
-                    this.save(values);
+                    values.save();
                     this.addLine(values);
                     btnSubmit.disabled = false;
                 },
@@ -100,7 +100,7 @@ class UserController {
             this.getPhoto(this.formUpdateEl).then(
                 (photo) => {
                     values.photo = photo;
-                    this.save(values, index);
+                    values.save();
                     this.formCreateEl.reset();
                     this.trUpdate(tr, values);
                     this.updateCount();
@@ -229,53 +229,13 @@ class UserController {
 
     }
 
-    getUsersFromSessionStorage() {
-        let users = [];
-
-        if (sessionStorage.getItem('users')) {
-            users = JSON.parse(sessionStorage.getItem('users'));
-        }
-
-        return users;
-    }
-
-    getUsersFromLocalStorage() {
-        let users = [];
-
-        if (localStorage.getItem('users')) {
-            users = JSON.parse(localStorage.getItem('users'));
-        }
-
-        return users;
-    }
-
     showAllSavedUsers() {
         // let users = this.getUsersFromSessionStorage();
-        let users = this.getUsersFromLocalStorage();
+        let users = User.getUsers();
         users.forEach(user => {
-            user = User.createFromJSON(user);
+            user = User.loadFromJSON(user);
             this.addLine(user);
         });
-    }
-
-    save(user, index = -1) {
-        // let users = this.getUsersFromSessionStorage();
-        let users = this.getUsersFromLocalStorage();
-
-        if (index !== -1) {
-            users[index] = user;
-        } else {
-            users.push(user);
-        }
-
-        // sessionStorage.setItem('users', JSON.stringify(users));
-        localStorage.setItem('users', JSON.stringify(users));
-    }
-
-    delete(index) {
-        let users = this.getUsersFromLocalStorage();
-        users.splice(index, 1);
-        localStorage.setItem('users', JSON.stringify(users));
     }
 
     addLine(user) {
@@ -407,10 +367,10 @@ class UserController {
     trAddDeleteEvent(tr) {
         tr.querySelector('.btn-delete').addEventListener('click', e => {
             if (confirm('Tem certeza que deseja apagar esse usuário?')) {
-                let index = tr.sectionRowIndex;
+                let user = User.loadFromJSON(JSON.parse(tr.dataset.user));
                 
                 tr.remove();
-                this.delete(index);
+                user.delete();
 
                 this.showPanelCreate();
                 this.updateCount();
