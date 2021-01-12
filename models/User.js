@@ -80,16 +80,21 @@ class User {
             // NOVO USER
             
             this._id = User.getNewId(); // cria o id na hora de salvar, caso já não o possua
-            console.log('new user com id:', this.id);
             users.push(this);
 
         } else {
             // ATUALIZANDO USER EXISTENTE
             console.log('updating user', this);
             users = users.map(user => {
-                console.log('map user:', user);
                 if (user.id == this.id) {
-                    user = this;
+                    // user = this;
+                    Object.assign(user, this); // - Faz o mesmo que a linha acima, mas mesclando o que tiver na direita com a esquerda.
+                                               // - Object.assign é interessante pq a gente não tá referenciando para outro objeto, mas
+                                               //   sim substituindo os dados da esquerda com o da direita e criando novos campos (caso
+                                               //   já não existam todos de início).
+                                               // - Object.assign permite que mais de um objeto seja designado para o primeiro objeto.
+                                               // - Object.assign só invoca os getters e setters dos objetos ('get' dos da direita e 'set'
+                                               //   do primeiro).
                 }
                 return user;
             });
