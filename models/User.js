@@ -1,9 +1,9 @@
 class User {
-    static _freeId = 0;
+    static _freeId = -1;
 
     constructor(name, gender, birth, country, email, password, photo, admin) {
         
-        this._id;
+        this._id = -1;
         this._name = name;
         this._gender = gender
         this._birth = birth;
@@ -48,7 +48,9 @@ class User {
             users = JSON.parse(localStorage.getItem('users'));
             users = users.map(user => {
                 return User.loadFromJSON(user);
-            });
+            }); // modifica cada elemento, retornando o elemento novo. O resultado disso é um novo array,
+                // então por conta disso eu atribuo esse novo array ao array antigo.
+
             /*
             users.forEach(user => {
                 // console.log('before', user); // Objeto genérico
@@ -61,24 +63,30 @@ class User {
         return users;
     }
 
-    static getNewId() { 
+    static getNewId() {
+        if (User._freeId < 0) {
+            // Aqui só entra se a página foi dada um refresh (perdendo o valor atualizado), ou se é a primeira vez que tá começando mesmo.
+            const users = User.getUsers();
+
+            User._freeId = users[users.length - 1].id; // se der refresh pelo menos ele estará com a contagem atualizada
+        }
         return ++User._freeId;
     }
 
     save() {
         // let users = this.getUsersFromSessionStorage();
         let users = User.getUsers();
-
-        if (!this.id) {
+        if (this.id < 0) {
             // NOVO USER
-
+            
             this._id = User.getNewId(); // cria o id na hora de salvar, caso já não o possua
+            console.log('new user com id:', this.id);
             users.push(this);
 
         } else {
             // ATUALIZANDO USER EXISTENTE
-            
-            users.map(user => {
+            console.log('updating user', this);
+            users = users.map(user => {
                 if (user.id === this.id) {
                     user = this;
                 }
@@ -97,7 +105,6 @@ class User {
         console.log(users);
         for (let i = 0; i < users.length; i++) {
             const user = users[i];
-            console.log(user.id);
             if (user.id == this.id) {
                 users.splice(i, 1);
                 break;

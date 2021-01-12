@@ -78,6 +78,7 @@ class UserController {
     
     onEdit() {
         document.querySelector('#box-user-update .btn-cancel').addEventListener('click', e => {
+            this.formUpdateEl.reset();
             this.showPanelCreate();
         });
 
@@ -95,13 +96,15 @@ class UserController {
                 return false;
             }
 
+            values._id = this.formUpdateEl.dataset.userId;
+
             let index = this.formUpdateEl.dataset.trIndex;
             let tr = this.tableEl.rows[index];
             this.getPhoto(this.formUpdateEl).then(
                 (photo) => {
                     values.photo = photo;
                     values.save();
-                    this.formCreateEl.reset();
+                    this.formUpdateEl.reset();
                     this.trUpdate(tr, values);
                     this.updateCount();
                     btnSubmit.disabled = false;
@@ -333,8 +336,9 @@ class UserController {
     trAddEditEvent(tr) {
         tr.querySelector('.btn-edit').addEventListener('click', e => {
             
-            let json = JSON.parse(tr.dataset.user);
+            let json = JSON.parse(tr.dataset.user); // de um texto enorme e colado para um array de jsons.
             this.formUpdateEl.dataset.trIndex = tr.sectionRowIndex;
+            this.formUpdateEl.dataset.userId = json._id;
 
             for (let name in json) {
                 let field = this.formUpdateEl.querySelector('[name=' + name.replace('_', '') + ']');
